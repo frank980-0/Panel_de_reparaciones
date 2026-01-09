@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Reparacion</title>
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+  <body>
+    <!-- Side_bar -->
+    <aside>
+      <nav>
+        <h2>Consola</h2>
+        <button data_section="Exportar">🗂️Exportar</button>
+      </nav>
+    </aside>
+    <!-- main del dashboard -->
+    <main>
+      <header>
+        <h1>Panel de Reparaciones</h1>
+        <address>Frank</address>
+      </header>
+      <output id="alerts" aria-live="polite" aria-atomic="true"></output>
+
+      <!-- seccion de estadisticas -->
+      <section>
+        <h2 id="stats-heading" class="sr-only">Estadisticas de Reparaciones</h2>
+        <!-- ingesos -->
+        <dl class="stats">
+          <article data-stat="ingresos">
+            <dt>💲Ingresos Totales</dt>
+            <dd>
+              <data value="0">$0</data>
+              <small>Dinero generado</small>
+            </dd>
+          </article>
+
+          <!-- reparaciones -->
+          <article data-stat="reparaciones">
+            <dt>🛠️ Reparaciones</dt>
+            <dd>
+              <data value="0">0</data>
+              <small>Total de reparaciones realizadas</small>
+            </dd>
+          </article>
+
+          <!-- en proceso -->
+          <article data-stat="pendientes">
+            <dt>⏳ En Proceso</dt>
+            <dd>
+              <data value="0">0</data>
+              <small>Reparaciones en curso</small>
+            </dd>
+          </article>
+
+          <!-- realizados -->
+          <article data-stat="completadas">
+            <dt>✅ Realizados</dt>
+            <dd>
+              <data value="0">0</data>
+              <small>Reparaciones completadas</small>
+            </dd>
+          </article>
+        </dl>
+      </section>
+      <!-- seccion que agrega nuevas reparaciones -->
+      <section>
+        <h2 id="repairs-heading" class="sr-only">Gestion de reparaciones</h2>
+        <figure>
+          <menu>
+            <li>
+              <button data-action="addRepair" data-variant="primary">
+                ➕ Agregar Nueva Reparacion
+              </button>
+            </li>
+          </menu>
+
+          <table>
+            <caption>
+              Historial de reparaciones
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Dispositivo</th>
+                <th scope="col">Problema</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="repairs-table">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <p>📱 No hay reparaciones registradas</p>
+                    <small>Haz click en "Nueva reparacion" para comenzar</small>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </figure>
+      </section>
+    </main>
+    <footer>
+      <p>
+        &copy; 2026 Panel de reparaciones de Frank. v1.0 |
+        <time datetime="2025-12-05">12 de Diciembre 2025</time>
+      </p>
+    </footer>
+    <dialog id="repair-modal">
+      <h2 id="repair-modal-title">Nueva reparacion</h2>
+      <form method="dialog">
+        <!-- clientes -->
+        <fieldset>
+          <legend>Nombre del cliente</legend>
+          <input
+            type="text"
+            id="repair-client"
+            name="cliente"
+            placeholder="Ingresa el nombre del cliente"
+            required
+          />
+        </fieldset>
+        <!-- modelos -->
+        <fieldset>
+          <legend>Dispositivo</legend>
+          <input
+            type="text"
+            id="repair-device"
+            name="device"
+            placeholder="Ingresa el modelo del dispositivo"
+            required
+          />
+        </fieldset>
+        <!-- tipo de problema -->
+        <fieldset>
+          <legend>Problema</legend>
+          <textarea
+            id="repair-problem"
+            name="problem"
+            placeholder="Describe el problema del dispositivo"
+            required
+          ></textarea>
+        </fieldset>
+
+        <!-- precios -->
+        <fieldset>
+          <legend>Precio (ARS)</legend>
+          <input
+            type="number"
+            id="repair-price"
+            name="price"
+            placeholder="Ingresa el precio de la reparacion"
+            min="0"
+            step="1000"
+            required
+          />
+        </fieldset>
+        <!-- estado del dispositivo -->
+        <fieldset>
+          <legend>Estado</legend>
+          <select id="repair-status" name="status" required>
+            <option value="en-proceso" selected>
+              ⏳ En Proceso | recien ingresado
+            </option>
+            <option value="completada">✅ Realizados</option>
+          </select>
+        </fieldset>
+        <footer>
+          <button type="button" data-action="saveRepair" data-variant="primary">
+            💾 Guardar Reparacion
+          </button>
+          <button type="button" data-action="closeModal">❌ Cancelar</button>
+        </footer>
+      </form>
+    </dialog>
+    <!-- FIREBASE Y FIRESTORE -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        getDocs,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        doc,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCH4X5VjqinYQFN8WkrGVZ76TwWZIHBoME",
+        authDomain: "panel-reparaciones.firebaseapp.com",
+        projectId: "panel-reparaciones",
+        storageBucket: "panel-reparaciones.firebasestorage.app",
+        messagingSenderId: "197091546898",
+        appId: "1:197091546898:web:c8d1411f976cdbced745cb",
+      };
+
+      // 🔥 Inicializar Firebase
+      const app = initializeApp(firebaseConfig);
+
+      // 📦 Inicializar Firestore
+      const db = getFirestore(app);
+
+      // 🌍 Exponer para el resto de la app
+      window.db = db;
+      window.firestore = {
+        collection,
+        getDocs,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        doc,
+        query,
+        orderBy,
+      };
+
+      console.log("🔥 Firebase + Firestore listos");
+    </script>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
